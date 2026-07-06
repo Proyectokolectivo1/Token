@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>statebate-pulse · Analytics</title>
+  <meta name="description" content="Dashboard de tippers top, recaudo y horarios de transmisión" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <!-- Pixel de statebate-pulse (auto-track) — reemplaza HOST -->
+  <script src="https://PULSE_HOST/p/pixel.js" data-room="dashboard" async></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📊</span>
+      <div>
+        <h1>statebate-pulse</h1>
+        <p class="subtitle">Tippers top · recaudo · horarios · boost de tráfico</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="tippers" role="tab">Top Tippers</button>
+      <button class="tab" data-tab="models" role="tab">Top Modelos</button>
+      <button class="tab" data-tab="online" role="tab">Online ahora</button>
+      <button class="tab" data-tab="traffic" role="tab">Tráfico</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- ========== Top Tippers ========== -->
+    <section id="tab-tippers" class="panel active">
+      <div class="panel-head">
+        <h2>Leaderboard de Tippers</h2>
+        <div class="controls">
+          <label>Ventana
+            <select id="tip-days">
+              <option value="1">24h</option>
+              <option value="7">7 días</option>
+              <option value="30" selected>30 días</option>
+              <option value="90">90 días</option>
+            </select>
+          </label>
+          <label>Top
+            <select id="tip-limit">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+          <button id="tip-refresh" class="btn">↻</button>
+        </div>
+      </div>
+      <div class="legend">
+        Score = volume·0.40 + frequency·0.20 + recency·0.15 + loyalty·0.15 + breadth·0.10
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-tippers">
+          <thead>
+            <tr>
+              <th>#</th><th>Tipper</th><th>Score</th><th>Tokens</th>
+              <th>Tips</th><th>Salas</th><th>Días activo</th><th>Último tip</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========== Top Modelos ========== -->
+    <section id="tab-models" class="panel">
+      <div class="panel-head">
+        <h2>Top Modelos por recaudo (30d)</h2>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-models">
+          <thead>
+            <tr>
+              <th>#</th><th>Modelo</th><th>Tokens 30d</th><th>Tips 30d</th>
+              <th>Viewers avg 7d</th><th>Pico 7d</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========== Online ahora ========== -->
+    <section id="tab-online" class="panel">
+      <div class="panel-head">
+        <h2>Salas online <span id="online-updated" class="muted"></span></h2>
+      </div>
+      <div id="online-grid" class="grid"></div>
+    </section>
+
+    <!-- ========== Tráfico ========== -->
+    <section id="tab-traffic" class="panel">
+      <div class="panel-head">
+        <h2>Leaderboard de tráfico en vivo</h2>
+        <p class="muted">Score 0-100 = viewers + crecimiento 1h + velocity de tokens</p>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-traffic">
+          <thead>
+            <tr><th>#</th><th>Sala</th><th>Score</th><th>Viewers</th><th>Crec. 1h</th><th>Tokens/h</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <strong>statebate-pulse</strong> · solo datos públicos ·
+      <a href="https://github.com/TU_USUARIO/statebate-pulse" target="_blank" rel="noopener">repo</a>
+    </div>
+    <div class="muted small">Consulta un abogado antes de operar en producción. Respeta ToS del sitio.</div>
+  </footer>
+
+  <!-- Modal de detalle de modelo -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="close" aria-label="cerrar">×</button>
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

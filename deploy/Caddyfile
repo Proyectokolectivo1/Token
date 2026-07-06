@@ -1,0 +1,44 @@
+# Caddyfile — reverse proxy con TLS automático (Let's Encrypt)
+# Reemplaza {$DOMAIN} por tu dominio real (configurado en .env del compose).
+
+{$DOMAIN} {
+    encode zstd gzip
+
+    # Cabeceras de seguridad / privacidad
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # CORS permisivo para GitHub Pages
+        Access-Control-Allow-Origin "*"
+        Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        Access-Control-Allow-Headers "*"
+        # Cache del pixel: no-store para view, pero pixel.js cacheable
+        ?Cache-Control "no-store"
+    }
+
+    # Pixel + API → app
+    reverse_proxy app:8080 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Rate limit básico por IP para el pixel (evita spam)
+    # Necesita plugin caddy-ratelimit; si no lo tienes, comenta estas líneas
+    # rate_limit {
+    #     zone pixel {
+    #         key {remote_host}
+    #         events 60
+    #         window 1m
+    #     }
+    # }
+
+    log {
+        output file /data/access.log {
+            roll_size 50mb
+            roll_keep 5
+        }
+        format json
+    }
+}

@@ -1,0 +1,57 @@
+name: Deploy dashboard to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dashboard/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject PULSE_API URL into dashboard
+        run: |
+          # Reemplaza el host del API en el JS por la URL de tu VM Oracle Cloud.
+          API_URL="${{ secrets.PULSE_API_URL }}"
+          if [ -z "$API_URL" ]; then
+            echo "⚠️  PULSE_API_URL secret no seteado; el dashboard usará localhost"
+            API_URL="http://localhost:8080"
+          fi
+          # Inyecta la config ANTES de que app.js lea window.PULSE_API
+          mkdir -p dashboard
+          cat > dashboard/config.js <<EOF
+          window.PULSE_API = "$API_URL";
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dashboard
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

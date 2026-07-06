@@ -1,0 +1,40 @@
+name: Scrape cycle (trigger Oracle Cloud)
+
+# Dispara una corrida de scraping en la VM de Oracle Cloud cada 15 minutos.
+# La VM corre el API+scraper; GitHub solo hace el POST /api/admin/scrape/once.
+# Esto mantiene el cron "gratuito" en GitHub Actions y el cómputo pesado en Oracle.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"      # cada 15 min
+  workflow_dispatch:            # manual
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger scrape cycle
+        run: |
+          set -e
+          curl -sS -X POST \
+            -H "X-Api-Key: ${{ secrets.PULSE_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"deep": false}' \
+            "${{ secrets.PULSE_API_URL }}/api/admin/scrape/once" \
+            -o /tmp/resp.json -w "HTTP %{http_code}\n"
+          cat /tmp/resp.json || true
+
+  trigger-deep:
+    # Perfil profundo 1x/día a las 04:15 UTC (menos carga en el sitio)
+    if: github.event.schedule == '0 15 4 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deep scrape
+        run: |
+          curl -sS -X POST \
+            -H "X-Api-Key: ${{ secrets.PULSE_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"deep": true}' \
+            "${{ secrets.PULSE_API_URL }}/api/admin/scrape/once" \
+            -o /tmp/resp.json -w "HTTP %{http_code}\n"
+          cat /tmp/resp.json || true

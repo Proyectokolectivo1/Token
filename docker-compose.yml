@@ -1,0 +1,60 @@
+# Docker Compose para Oracle Cloud VM (Always Free ARM Ampere A1)
+# 3 servicios: db (Postgres+Timescale), app (API+scraper+pixel), caddy (reverse proxy + TLS)
+services:
+  db:
+    image: timescale/timescaledb:2.17.2-pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pulse
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me_strong}
+      POSTGRES_DB: pulse
+      TS_TUNE_MEMORY: 2GB
+      TS_TUNE_NUM_CPUS: 4
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No exponer el puerto al host; solo la red interna
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://pulse:${DB_PASSWORD:-change_me_strong}@db:5432/pulse
+    # El scraper puede subir de CPU; limita para no matar el API
+    deploy:
+      resources:
+        limits:
+          cpus: "2.5"
+          memory: 3G
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/p/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-pulse.tudominio.com}
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

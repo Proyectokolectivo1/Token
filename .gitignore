@@ -1,0 +1,38 @@
+# === Ignorar siempre ===
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+.env.local
+*.log
+
+# Playwright
+.playwright/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Build local
+dist/
+build/
+*.egg-info/
+
+# DB local
+*.sqlite3
+*.db
+
+# Caddy data local
+caddy_data/
+caddy_config/
+
+# Backups
+backups/
+*.sql.gz
